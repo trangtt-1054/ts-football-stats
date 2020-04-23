@@ -1,0 +1,45 @@
+//for backup
+import fs from "fs";
+import { dateStringToDate } from "./utils";
+import { MatchResult } from "./MatchResults";
+
+//type alias or tuple
+type MatchData = [Date, string, string, number, number, MatchResult, string];
+
+export class CSVFileReader {
+  data: MatchData[] = [];
+
+  constructor(public filename: string) {
+    //public: automatically define a property on the class called 'filename', we want to pass the file name as an option to the class, để user có thể pass tên file tuỳ ý vào
+  }
+
+  read(): void {
+    this.data = fs
+      .readFileSync(this.filename, {
+        encoding: "utf-8",
+      })
+      .split("\n")
+      .map((row: string): string[] => {
+        //tách file thành từng dòng, mỗi dòng đấy vẫn là 1 string
+        return row.split(",");
+      })
+      .map((row: string[]): MatchData => {
+        //tách từng element của row về dạng data phù hợp
+        return [
+          dateStringToDate(row[0]),
+          row[1], //giữ nguyên row[1] và row[2]
+          row[2],
+          parseInt(row[3]),
+          parseInt(row[4]),
+          row[5] as MatchResult, //row[5] will be H, A or D
+          row[6],
+        ];
+      });
+  }
+}
+
+/* row[5] as MatchResult gọi là Type Assertion, we tell TS that this string is a possible value in MatchResults enum  
+
+vì row là 1 data structure mà mình đã biết trước là vị trí nào thì có type gì, ví dụ index 0 luôn là date, 1,2 luôn là string, 3,4 luôn là number... => nên dùng tuple chứ ko define type kiểu (Date | string | number | MatchResult)[]
+
+*/
